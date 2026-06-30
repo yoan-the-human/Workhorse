@@ -211,8 +211,8 @@ class WorkDayViewModel(application: Application) : AndroidViewModel(application)
 
                 val localDate = LocalDate.parse(date)
 
-                // Base target start is 10:00 (600 mins), end is 18:00 (1080 mins)
-                val defStart = 10 * 60
+                // Base target start is 09:00 (540 mins), end is 18:00 (1080 mins)
+                val defStart = 9 * 60
                 val defEnd = 18 * 60
 
                 val actualStartMins = defStart + startDebt

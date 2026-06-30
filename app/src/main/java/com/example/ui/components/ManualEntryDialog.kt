@@ -13,7 +13,7 @@ import java.time.LocalDate
 @Composable
 fun ManualEntryDialog(
     initialDate: String = LocalDate.now().toString(),
-    initialStartHour: Int = 10,
+    initialStartHour: Int = 9,
     initialStartMin: Int = 0,
     initialEndHour: Int = 18,
     initialEndMin: Int = 0,

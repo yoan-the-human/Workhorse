@@ -769,8 +769,8 @@ fun DashboardScreen(
     if (showManualEntryDialog) {
         ManualEntryDialog(
             initialDate = LocalDate.now().toString(),
-            initialStartHour = (todayDay?.defaultStartMinutes ?: (10 * 60)) / 60,
-            initialStartMin = (todayDay?.defaultStartMinutes ?: (10 * 60)) % 60,
+            initialStartHour = (todayDay?.defaultStartMinutes ?: (9 * 60)) / 60,
+            initialStartMin = (todayDay?.defaultStartMinutes ?: (9 * 60)) % 60,
             initialEndHour = (todayDay?.defaultEndMinutes ?: (18 * 60)) / 60,
             initialEndMin = (todayDay?.defaultEndMinutes ?: (18 * 60)) % 60,
             onDismiss = { showManualEntryDialog = false },
