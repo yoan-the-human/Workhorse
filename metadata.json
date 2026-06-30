@@ -1,0 +1,6 @@
+{
+  "name": "Workhorse",
+  "description": "Track work hours, overwork, and breaks to stay on top of your working schedule.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
