@@ -109,6 +109,12 @@ class WorkDayViewModel(application: Application) : AndroidViewModel(application)
     }
 
 
+    fun saveWorkDay(workDay: WorkDay) {
+        viewModelScope.launch {
+            repository.insertDay(workDay)
+        }
+    }
+
     fun deleteDayRecord(date: String) {
         viewModelScope.launch {
             val existing = repository.getDay(date)
@@ -257,10 +263,10 @@ class WorkDayViewModel(application: Application) : AndroidViewModel(application)
         val result = mutableListOf<GridSquare>()
         val workdaysOnly = allDays.filter { day ->
             !day.checkIfNonWorkDay() && (day.actualStartMillis != null || day.actualEndMillis != null || day.totalBreakMinutes > 0)
-        }.sortedBy { it.date }
+        }.sortedByDescending { it.date }
 
         val recentWorkdays = if (workdaysOnly.size > 228) {
-            workdaysOnly.takeLast(228)
+            workdaysOnly.take(228)
         } else {
             workdaysOnly
         }

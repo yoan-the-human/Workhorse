@@ -20,7 +20,8 @@ private val DarkColorScheme =
     onBackground = TextPrimary,
     onSurface = TextPrimary,
     surfaceVariant = DarkSurfaceVariant,
-    onSurfaceVariant = TextSecondary
+    onSurfaceVariant = TextSecondary,
+    error = RedError
   )
 
 @Composable

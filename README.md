@@ -35,7 +35,7 @@ Workhorse is a sophisticated Android application designed for professionals who 
 ### Installation
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/workhorse.git
+   git clone https://github.com/yoan-the-human/workhorse.git
    ```
 2. Open the project in Android Studio.
 3. Sync Project with Gradle Files.

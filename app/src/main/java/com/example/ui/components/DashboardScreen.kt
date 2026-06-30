@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -52,7 +53,7 @@ fun DashboardScreen(
     val todayDay by viewModel.todayWorkDay.collectAsState()
 
     var showManualEntryDialog by remember { mutableStateOf(false) }
-    var showPasteImportDialog by remember { mutableStateOf(false) }
+    var showManageDaysDialog by remember { mutableStateOf(false) }
     var showClearConfirmDialog by remember { mutableStateOf(false) }
     var isGridExpanded by remember { mutableStateOf(false) }
 
@@ -159,6 +160,22 @@ fun DashboardScreen(
                             )
                         }
 
+                        // Manage Days list button
+                        IconButton(
+                            onClick = { showManageDaysDialog = true },
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                                .border(1.dp, MaterialTheme.colorScheme.surfaceVariant, CircleShape)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.List,
+                                contentDescription = "Manage Days",
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
 
                         // Plus button for manual entries
                         IconButton(
@@ -252,6 +269,20 @@ fun DashboardScreen(
             val hasEnded = todayDay?.actualEndMillis != null
             val isOutside = todayDay?.activeBreakStartMillis != null
 
+            val startColor = if (hasStarted) {
+                val debt = todayDay?.getStartDebt() ?: 0
+                if (debt <= 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+            } else {
+                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+            }
+
+            val endColor = if (hasEnded) {
+                val debt = todayDay?.getEndDebt() ?: 0
+                if (debt <= 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+            } else {
+                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+            }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -312,8 +343,7 @@ fun DashboardScreen(
                         style = MaterialTheme.typography.bodySmall.copy(
                             fontWeight = FontWeight.SemiBold
                         ),
-                        color = if (hasStarted) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                        color = startColor
                     )
                 }
 
@@ -455,8 +485,54 @@ fun DashboardScreen(
                         style = MaterialTheme.typography.bodySmall.copy(
                             fontWeight = FontWeight.SemiBold
                         ),
-                        color = if (hasEnded) MaterialTheme.colorScheme.error
-                        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                        color = endColor
+                    )
+                }
+            }
+
+
+            // --- PERIOD OVERWORK/OWE BALANCE (4 AREAS) ---
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "TIME BALANCE BY PERIOD",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.5.sp
+                    ),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    PeriodDebtCard(
+                        label = "Today",
+                        debtMinutes = todayDay?.getTotalDebt() ?: 0,
+                        modifier = Modifier.weight(1f)
+                    )
+                    PeriodDebtCard(
+                        label = "Past 7 Days",
+                        debtMinutes = getDebtForPeriod(allDaysAsc, 7),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    PeriodDebtCard(
+                        label = "Past 30 Days",
+                        debtMinutes = getDebtForPeriod(allDaysAsc, 30),
+                        modifier = Modifier.weight(1f)
+                    )
+                    PeriodDebtCard(
+                        label = "Past 365 Days",
+                        debtMinutes = getDebtForPeriod(allDaysAsc, 365),
+                        modifier = Modifier.weight(1f)
                     )
                 }
             }
@@ -600,80 +676,37 @@ fun DashboardScreen(
                         }
                     }
 
-                    Divider(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
 
-                    // Streaks grid 2x2 style list
+                    // Streaks grid rows
                     Column(
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp)
                     ) {
-                        // Standing out Current Streak Card
-                        Card(
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f)
-                            ),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f), RoundedCornerShape(12.dp))
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 10.dp, horizontal = 12.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        imageVector = Icons.Default.Star,
-                                        contentDescription = "Current Streak",
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        text = "Current Streak",
-                                        style = MaterialTheme.typography.labelMedium.copy(
-                                            fontWeight = FontWeight.Bold
-                                        ),
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                }
-                                Text(
-                                    text = "${stats.currentLightBlueStreak} Days",
-                                    style = MaterialTheme.typography.titleSmall.copy(
-                                        fontWeight = FontWeight.Black
-                                    ),
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
-
-                        // The other 4 in a 2x2 grid
-                        Row(modifier = Modifier.fillMaxWidth()) {
-                            StreakItem(
-                                label = "Streak Record",
-                                value = "${stats.maxLightBlueStreak} Days",
-                                modifier = Modifier.weight(1f)
-                            )
-                            StreakItem(
-                                label = "Early Start Best",
-                                value = "${stats.maxStartStreak} Days",
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                        Row(modifier = Modifier.fillMaxWidth()) {
-                            StreakItem(
-                                label = "Late End Best",
-                                value = "${stats.maxEndStreak} Days",
-                                modifier = Modifier.weight(1f)
-                            )
-                            StreakItem(
-                                label = "Middle Break Best",
-                                value = "${stats.maxMiddleStreak} Days",
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
+                        StreakRow(
+                            currentLabel = "Current Streak",
+                            currentValue = "${stats.currentLightBlueStreak} Days",
+                            bestLabel = "Streak Record",
+                            bestValue = "${stats.maxLightBlueStreak} Days"
+                        )
+                        StreakRow(
+                            currentLabel = "Current Early Start",
+                            currentValue = "${stats.currentStartStreak} Days",
+                            bestLabel = "Early Start Best",
+                            bestValue = "${stats.maxStartStreak} Days"
+                        )
+                        StreakRow(
+                            currentLabel = "Current Middle Break",
+                            currentValue = "${stats.currentMiddleStreak} Days",
+                            bestLabel = "Current Middle Best",
+                            bestValue = "${stats.maxMiddleStreak} Days"
+                        )
+                        StreakRow(
+                            currentLabel = "Current Late End",
+                            currentValue = "${stats.currentEndStreak} Days",
+                            bestLabel = "Late End Best",
+                            bestValue = "${stats.maxEndStreak} Days"
+                        )
                     }
                 }
             }
@@ -709,45 +742,22 @@ fun DashboardScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    Button(
+                        onClick = { importLauncher.launch("*/*") },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = Color.Black
+                        ),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Button(
-                            onClick = { importLauncher.launch("*/*") },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = Color.Black
-                            ),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Refresh,
-                                contentDescription = "Import JSON File",
-                                tint = Color.Black,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Import File", fontSize = 11.sp, color = Color.Black)
-                        }
-
-                        Button(
-                            onClick = { showPasteImportDialog = true },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                contentColor = Color(0xFF00E5FF)
-                            ),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Create,
-                                contentDescription = "Paste Backup",
-                                tint = Color(0xFF00E5FF),
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Paste JSON", fontSize = 11.sp, color = Color(0xFF00E5FF))
-                        }
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Import JSON File",
+                            tint = Color.Black,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Import File", fontSize = 11.sp, color = Color.Black)
                     }
                 }
             }
@@ -776,46 +786,17 @@ fun DashboardScreen(
     }
 
 
-    if (showPasteImportDialog) {
-        var pasteText by remember { mutableStateOf("") }
-        AlertDialog(
-            onDismissRequest = { showPasteImportDialog = false },
-            title = { Text("Paste JSON Backup") },
-            text = {
-                Column {
-                    Text("Paste your exported JSON backup text below:", style = MaterialTheme.typography.bodySmall)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = pasteText,
-                        onValueChange = { pasteText = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(150.dp),
-                        placeholder = { Text("[{...}]") }
-                    )
-                }
+    if (showManageDaysDialog) {
+        ManageDaysDialog(
+            allDaysDesc = allDaysDesc,
+            onDismiss = { showManageDaysDialog = false },
+            onSave = { updatedDay ->
+                viewModel.saveWorkDay(updatedDay)
+                Toast.makeText(context, "Record saved!", Toast.LENGTH_SHORT).show()
             },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        coroutineScope.launch {
-                            val success = viewModel.importBackup(pasteText)
-                            if (success) {
-                                Toast.makeText(context, "Backup imported successfully!", Toast.LENGTH_SHORT).show()
-                                showPasteImportDialog = false
-                            } else {
-                                Toast.makeText(context, "Failed to parse backup JSON", Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                    }
-                ) {
-                    Text("Import Backup")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showPasteImportDialog = false }) {
-                    Text("Cancel")
-                }
+            onDelete = { date ->
+                viewModel.deleteDayRecord(date)
+                Toast.makeText(context, "Record deleted!", Toast.LENGTH_SHORT).show()
             }
         )
     }
@@ -1039,5 +1020,126 @@ fun formatMinutesToShortOffset(minutes: Int): String {
         hrs > 0 -> "$sign${hrs}h${mins}m"
         else -> "$sign${mins}m"
     }
+}
+
+@Composable
+fun PeriodDebtCard(
+    label: String,
+    debtMinutes: Int,
+    modifier: Modifier = Modifier
+) {
+    val isOverworking = debtMinutes <= 0
+    val highlightColor = if (isOverworking) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+
+    val absMin = Math.abs(debtMinutes)
+    val hrs = absMin / 60
+    val mns = absMin % 60
+    val sign = if (debtMinutes < 0) "-" else if (debtMinutes > 0) "+" else ""
+    val formattedTime = String.format("%s%02d:%02d", sign, hrs, mns)
+
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.3f))
+            .border(
+                1.dp,
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                RoundedCornerShape(16.dp)
+            )
+            .padding(12.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = label.uppercase(),
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                ),
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+            )
+            Text(
+                text = formattedTime,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Black,
+                    fontSize = 18.sp
+                ),
+                color = highlightColor
+            )
+            Text(
+                text = if (isOverworking) "Credit" else "Owing",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Normal
+                ),
+                color = highlightColor.copy(alpha = 0.8f)
+            )
+        }
+    }
+}
+
+@Composable
+fun StreakRow(
+    currentLabel: String,
+    currentValue: String,
+    bestLabel: String,
+    bestValue: String
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = currentLabel,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = currentValue,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.primary
+            )
+            Text(
+                text = "  |  ",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+            )
+            Text(
+                text = bestLabel,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(
+                text = bestValue,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}
+
+fun getDebtForPeriod(allDays: List<WorkDay>, daysCount: Int): Int {
+    val today = LocalDate.now()
+    val startDate = today.minusDays(daysCount.toLong() - 1)
+    return allDays
+        .filter { !it.checkIfNonWorkDay() }
+        .filter {
+            try {
+                val d = LocalDate.parse(it.date)
+                !d.isBefore(startDate) && !d.isAfter(today)
+            } catch (e: Exception) {
+                false
+            }
+        }
+        .sumOf { it.getTotalDebt() }
 }
 
