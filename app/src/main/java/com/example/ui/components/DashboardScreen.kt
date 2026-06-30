@@ -684,28 +684,28 @@ fun DashboardScreen(
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp)
                     ) {
                         StreakRow(
-                            currentLabel = "Current Streak",
-                            currentValue = "${stats.currentLightBlueStreak} Days",
-                            bestLabel = "Streak Record",
-                            bestValue = "${stats.maxLightBlueStreak} Days"
+                            label = "Streak",
+                            currentValue = stats.currentLightBlueStreak,
+                            bestLabel = "Record",
+                            bestValue = stats.maxLightBlueStreak
                         )
                         StreakRow(
-                            currentLabel = "Current Early Start",
-                            currentValue = "${stats.currentStartStreak} Days",
-                            bestLabel = "Early Start Best",
-                            bestValue = "${stats.maxStartStreak} Days"
+                            label = "Early Start",
+                            currentValue = stats.currentStartStreak,
+                            bestLabel = "Best",
+                            bestValue = stats.maxStartStreak
                         )
                         StreakRow(
-                            currentLabel = "Current Middle Break",
-                            currentValue = "${stats.currentMiddleStreak} Days",
-                            bestLabel = "Current Middle Best",
-                            bestValue = "${stats.maxMiddleStreak} Days"
+                            label = "Middle Break",
+                            currentValue = stats.currentMiddleStreak,
+                            bestLabel = "Best",
+                            bestValue = stats.maxMiddleStreak
                         )
                         StreakRow(
-                            currentLabel = "Current Late End",
-                            currentValue = "${stats.currentEndStreak} Days",
-                            bestLabel = "Late End Best",
-                            bestValue = "${stats.maxEndStreak} Days"
+                            label = "Late End",
+                            currentValue = stats.currentEndStreak,
+                            bestLabel = "Best",
+                            bestValue = stats.maxEndStreak
                         )
                     }
                 }
@@ -1084,10 +1084,10 @@ fun PeriodDebtCard(
 
 @Composable
 fun StreakRow(
-    currentLabel: String,
-    currentValue: String,
+    label: String,
+    currentValue: Int,
     bestLabel: String,
-    bestValue: String
+    bestValue: Int
 ) {
     Row(
         modifier = Modifier
@@ -1097,31 +1097,23 @@ fun StreakRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = currentLabel,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+            text = label,
+            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.9f)
         )
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Text(
-                text = currentValue,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                text = "${currentValue}d",
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Black),
                 color = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                text = "  |  ",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-            )
-            Text(
-                text = bestLabel,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-                text = bestValue,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.primary
+                text = "($bestLabel: ${bestValue}d)",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
             )
         }
     }
